@@ -1,0 +1,101 @@
+routes https://guides.rubyonrails.org/routing.html
+
+controller
+
+
+controller params
+https://rusrails.ru/action-controller-overview#parametry
+пункт 4
+--------------------------------------------------------------------
+читай тест как по русски что хочешь получить
+
+
+1. сделать update
+2. сделать удаление
+
+отдельный валидатор под удаление, Егор должен найти необязательный параметр
+
+
+базово проверяем ответ, ответ из статуса и тела
++сайд эффект
+проверка эффекта
+
+1. validator update
+2. redis
+
+
+-----------------------------------------------------
+
+1. log в рельсе
+2. initializer
+
+сделать ручку(экшон) POST /api/payments/:id/pay
+брать платёж и по нему стартовать джобу
+
++тесты 200
+когда платежа нет
+
+* тесты на джобу
+-------------------------------------------------------
+02/11
+rails enum
+
+
+active record связи до 4 пункта
+    создеть модель Deal(id, contract_number: string, status: string(enum))
+    создать модель PaymentSchedule у него есть платежи, у него должен принадлежать сделке
+active record  интрефейсы 1-4  6-7 13-18(19) 21-22
+
+конечный автомат
+
+
+14.11.2024
+фарадей гем покидать запросы в бэкенд пейментс
+https://habr.com/ru/articles/358304/
+https://ru.hexlet.io/courses/js-abp/lessons/fsm/theory_unit
+https://habr.com/ru/articles/64403/
+https://blog.arkency.com/replace-aasm-with-rails-enum-today/
+https://www.nopio.com/blog/ruby-state-machine-aasm-tutorial/
+
+21.11
+1. поставить postgres, и приложение на него перевести
+пользователя права
+https://www.8host.com/blog/nastrojka-prilozheniya-ruby-on-rails-na-postgresql-v-ubuntu-18-04/
+2.тест починить
+3. для модели написать
+
+25.11
+api для сделок полный crud
+deals_spec.rb тест, маршрут, DealsController
+
+check    index -get  api/deals
+check    show -get  api/deals/:id
+check    create - post api/deals
+check    update - patch api/deals/:id
+check    delete -delete api/deals/:id
+
+check 1. (удалить сначало платежи и расписание)
+check 2. todo
+
+3. api для PaymentSchedule
+        create - post api/deals/:deal_id/payment_schedule (проверить если уже есть, статус 422 + текст ошибки)
+check   show - get api/deals/:deal_id/payment_schedule
+        update - patch api/deals/:deal_id/payment_schedule
+        delete - delete api/deals/:deal_id/payment_schedule (удалить платежи)
+
+4. +фильтры на платежи
+
+5. +стартовать платежи
+
+-------------------------------------------------------------------------
+
+env-ы
+http клиент для отправки запросов самим себе
+
+graphQL
+интеракторы
+
+
+//
+валидатор и состояния??
+

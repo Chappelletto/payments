@@ -74,22 +74,35 @@ check    create - post api/deals
 check    update - patch api/deals/:id
 check    delete -delete api/deals/:id
 
+
 check 1. (удалить сначало платежи и расписание)
 check 2. todo
-
 3. api для PaymentSchedule
-        create - post api/deals/:deal_id/payment_schedule (проверить если уже есть, статус 422 + текст ошибки)
+check   create - post api/deals/:deal_id/payment_schedule 
 check   show - get api/deals/:deal_id/payment_schedule
-        update - patch api/deals/:deal_id/payment_schedule
-        delete - delete api/deals/:deal_id/payment_schedule (удалить платежи)
+check     delete - delete api/deals/:deal_id/payment_schedule (удалить платежи)
+(проверить если уже есть, статус 422 + текст ошибки)
 
-4. +фильтры на платежи
-
-5. +стартовать платежи
-
+стартовать платежи
 -------------------------------------------------------------------------
+check 1. пендинги
+доразобраться
+"when contract number is already taken"
 
-env-ы
+check 2. authenticate! на все describe (тесты, передать заголовки, в контроллере ауф)
+
+с делетом ошибка
+Failure/Error: expect(subject).to have_http_status(401)
+       expected a response object, but an instance of String was received
+
+
+3. +фильтры на платежи
+    1)по статусам
+    2)после какой-то даты
+
+
+
+shared_examples :requires_authentication
 http клиент для отправки запросов самим себе
 
 graphQL

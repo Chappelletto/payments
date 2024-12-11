@@ -1,12 +1,14 @@
 module Api
   class PaymentsController < ApplicationController
     def index
+      authenticate!
       payments = Payment.all
       list = payments.map { |payment| serialize_payment(payment) }
       render json: list
     end
 
     def show
+      authenticate!
       payment = Payment.find_by(id: params[:id])
 
       if payment.present?
@@ -17,6 +19,7 @@ module Api
     end
 
     def create
+      authenticate!
       validation_result = Api::CreatePaymentValidator.new.call(payment_params.to_h)
       if validation_result.failure?
         return render json: {errors: validation_result.errors.to_h}, status: 400
@@ -38,6 +41,7 @@ module Api
     end
 
     def update
+      authenticate!
       validation_result = Api::UpdatePaymentValidator.new.call(payment_params.to_h)
       if validation_result.failure?
         return render json: {errors: validation_result.errors.to_h}, status: 400
@@ -53,6 +57,7 @@ module Api
     end
 
     def delete
+      authenticate!
       payment = Payment.find_by(id: params[:id])
 
       if payment.present?
@@ -64,6 +69,7 @@ module Api
     end
 
     def pay
+      authenticate!
       payment = Payment.find_by(id: params[:id])
       if payment.present?
         PerformPaymentJob.perform_async(payment.id)

@@ -1,12 +1,7 @@
 module Api
   class DealsController < ApplicationController
     def index
-      # if request.headers["HTTP_X_AUTH_TOKEN"].nil?
-      #   return render json: {error: "auth token not found"}, status: 401
-      # end
-      # if request.headers["HTTP_X_AUTH_TOKEN"] != "api-token"
-      #   return render json: {error: "auth token invalid"}, status: 401
-      # end
+      authenticate!
 
       deals = Deal.all
 
@@ -25,6 +20,8 @@ module Api
     end
 
     def show
+      authenticate!
+
       deal = Deal.find_by(id: params[:id])
 
       if deal.present?
@@ -35,9 +32,20 @@ module Api
     end
 
     def create
+      authenticate!
+
       validation_result = Api::CreateDealValidator.new.call(deal_params.to_h)
       if validation_result.failure?
         return render json: {errors: validation_result.errors.to_h}, status: 400
+      end
+
+      Deal.all.each do |deal|
+        pp "===================="
+        pp deal
+        pp deal.contract_number
+        if deal.contract_number == deal_params.to_h[:contract_number]
+          render json: {error: "contract_number should be uniq"}, status: 404
+        end
       end
 
       deal = Deal.create!(validation_result.to_h)
@@ -45,6 +53,8 @@ module Api
     end
 
     def update
+      authenticate!
+
       validation_result = Api::UpdateDealValidator.new.call(deal_params.to_h)
       if validation_result.failure?
         return render json: {errors: validation_result.errors.to_h}, status: 400
@@ -60,10 +70,16 @@ module Api
     end
 
     def delete
+      authenticate!
+
       deal = Deal.find_by(id: params[:id])
 
       if deal.present?
-        deal.destroy!
+        Deal.transaction do
+          deal.payment_schedule&.payments&.each(&:destroy!)
+          deal.payment_schedule&.destroy!
+          deal.destroy!
+        end
         render json: serialize_deal(deal)
       else
         render json: {error: "deal not found"}, status: 404

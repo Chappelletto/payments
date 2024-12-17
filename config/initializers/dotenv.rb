@@ -1,1 +1,1 @@
-Dotenv.require_keys("API_TOKEN")
+Dotenv.require_keys("API_TOKEN", "PAYMENTS_BASE_URL")

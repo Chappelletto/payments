@@ -91,10 +91,6 @@ check 1. пендинги
 
 check 2. authenticate! на все describe (тесты, передать заголовки, в контроллере ауф)
 
-с делетом ошибка
-Failure/Error: expect(subject).to have_http_status(401)
-       expected a response object, but an instance of String was received
-
 
 3. +фильтры на платежи
     1)по статусам
@@ -103,10 +99,19 @@ Failure/Error: expect(subject).to have_http_status(401)
 
 
 shared_examples :requires_authentication
+
+
 http клиент для отправки запросов самим себе
+------------------------------------------
+redis
+rbenv - все переставить
+PaymentsApi - дописать методы
+
+-------------------------------------------------------------
+webmock
+интеракторы
 
 graphQL
-интеракторы
 
 
 //

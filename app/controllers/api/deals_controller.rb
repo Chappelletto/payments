@@ -40,11 +40,8 @@ module Api
       end
 
       Deal.all.each do |deal|
-        pp "===================="
-        pp deal
-        pp deal.contract_number
-        if deal.contract_number == deal_params.to_h[:contract_number]
-          render json: {error: "contract_number should be uniq"}, status: 404
+        if deal.contract_number.to_i == deal_params.to_h[:contract_number]
+          return render json: {error: "contract_number should be uniq"}, status: 404
         end
       end
 

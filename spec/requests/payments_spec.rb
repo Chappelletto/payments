@@ -1,13 +1,15 @@
+require_relative "shared_examples"
+
 RSpec.describe "/api/payments", type: :request do
-  def parsed_body
-    JSON.parse(subject.body, symbolize_names: true) # symbolize чтобы вернул ключи символы
-  end
   describe "GET /" do
     subject(:payments_response) do
-      get "/api/payments", headers: request_headers
+      get "/api/payments", params: request_params, headers: request_headers
       response
     end
-    let(:request_headers) { {"X-Auth-Token" => "api-token"} }
+
+    include_context "requires authentification"
+
+    let(:request_params) { {} }
     let(:payments) do
       deal = Deal.create!(contract_number: 1, status: "open")
       payment_schedule = PaymentSchedule.create!(deal: deal)
@@ -18,11 +20,11 @@ RSpec.describe "/api/payments", type: :request do
         ),
         Payment.create!(
           amount: 2000, date: "2024-10-12", status: "paid",
-          payment_schedule: payment_schedule
+          payment_schedule: payment_schedule, created_at: 3.days.ago
         ),
         Payment.create!(
           amount: 3000, date: "2024-10-10", status: "pending",
-          payment_schedule: payment_schedule
+          payment_schedule: payment_schedule, created_at: 5.days.ago
         )
       ]
     end
@@ -57,21 +59,29 @@ RSpec.describe "/api/payments", type: :request do
       end
     end
 
-    context "when without auth token" do
-      let(:request_headers) { {} }
+    #---------------FILETERS
+    context "with fiters by status" do
+      let(:request_params) { {status: "paid"} }
 
-      it "returns error" do
-        expect(subject).to have_http_status(401)
-        expect(parsed_body).to eq(error: "X-Auth-Token is missing")
+      it "returns deals with status open" do
+        expect(payments_response).to have_http_status(200)
+        expect(parsed_body).to eq(
+          [
+            {id: payments[0].id, amount: 30000, date: "2024-12-12", status: "paid"},
+            {id: payments[1].id, amount: 2000, date: "2024-10-12", status: "paid"}
+          ]
+        )
       end
     end
 
-    context "when invalid token" do
-      let(:request_headers) { {"X-Auth-Token" => "123"} }
+    context "with filter created_after" do
+      let(:request_params) { {created_after: 2.days.ago, status: "paid"} }
 
-      it "return error" do
-        expect(subject).to have_http_status(401)
-        expect(parsed_body).to eq(error: "X-Auth-Token is invalid")
+      it "returns deals by filters" do
+        expect(payments_response).to have_http_status(200)
+        expect(parsed_body).to eq(
+          [{id: payments[0].id, amount: 30000, date: "2024-12-12", status: "paid"}]
+        )
       end
     end
   end
@@ -81,7 +91,9 @@ RSpec.describe "/api/payments", type: :request do
       get "/api/payments/#{payment.id}", headers: request_headers
       response
     end
-    let(:request_headers) { {"X-Auth-Token" => "api-token"} }
+
+    include_context "requires authentification"
+
     let(:payment) do
       deal = Deal.create!(contract_number: 1, status: "open")
       payment_schedule = PaymentSchedule.create!(deal: deal)
@@ -114,24 +126,6 @@ RSpec.describe "/api/payments", type: :request do
         )
       end
     end
-
-    context "when without auth token" do
-      let(:request_headers) { {} }
-
-      it "returns error" do
-        expect(subject).to have_http_status(401)
-        expect(parsed_body).to eq(error: "X-Auth-Token is missing")
-      end
-    end
-
-    context "when invalid token" do
-      let(:request_headers) { {"X-Auth-Token" => "123"} }
-
-      it "return error" do
-        expect(subject).to have_http_status(401)
-        expect(parsed_body).to eq(error: "X-Auth-Token is invalid")
-      end
-    end
   end
 
   describe "POST /" do
@@ -139,7 +133,9 @@ RSpec.describe "/api/payments", type: :request do
       post "/api/payments", params: request_params, headers: request_headers, as: :json
       response # returned value
     end
-    let(:request_headers) { {"X-Auth-Token" => "api-token"} }
+
+    include_context "requires authentification"
+
     let(:deal) do
       deal_1 = Deal.create!(contract_number: 1, status: "open")
       PaymentSchedule.create!(deal: deal_1)
@@ -203,24 +199,6 @@ RSpec.describe "/api/payments", type: :request do
         expect(Payment.count).to eq(0)
       end
     end
-
-    context "when without auth token" do
-      let(:request_headers) { {} }
-
-      it "returns error" do
-        expect(subject).to have_http_status(401)
-        expect(parsed_body).to eq(error: "X-Auth-Token is missing")
-      end
-    end
-
-    context "when invalid token" do
-      let(:request_headers) { {"X-Auth-Token" => "123"} }
-
-      it "return error" do
-        expect(subject).to have_http_status(401)
-        expect(parsed_body).to eq(error: "X-Auth-Token is invalid")
-      end
-    end
   end
 
   # -------------------------------------------------------------------------
@@ -229,7 +207,9 @@ RSpec.describe "/api/payments", type: :request do
       patch "/api/payments/#{payment.id}", params: request_params, headers: request_headers, as: :json
       response # returned value
     end
-    let(:request_headers) { {"X-Auth-Token" => "api-token"} }
+
+    include_context "requires authentification"
+
     let(:request_params) do
       {amount: 10000, date: "2024-01-01", status: "pending"}
     end
@@ -293,24 +273,6 @@ RSpec.describe "/api/payments", type: :request do
         expect(parsed_body).to eq({error: "payment not found"})
       end
     end
-
-    context "when without auth token" do
-      let(:request_headers) { {} }
-
-      it "returns error" do
-        expect(subject).to have_http_status(401)
-        expect(parsed_body).to eq(error: "X-Auth-Token is missing")
-      end
-    end
-
-    context "when invalid token" do
-      let(:request_headers) { {"X-Auth-Token" => "123"} }
-
-      it "return error" do
-        expect(subject).to have_http_status(401)
-        expect(parsed_body).to eq(error: "X-Auth-Token is invalid")
-      end
-    end
   end
 
   describe "DELETE /:id" do
@@ -318,7 +280,9 @@ RSpec.describe "/api/payments", type: :request do
       delete "/api/payments/#{payment.id}", headers: request_headers, as: :json
       response # returned value
     end
-    let(:request_headers) { {"X-Auth-Token" => "api-token"} }
+
+    include_context "requires authentification"
+
     let(:payment) do
       deal = Deal.create!(contract_number: "1", status: "open")
       payment_schedule = PaymentSchedule.create!(deal_id: deal.id)
@@ -343,24 +307,6 @@ RSpec.describe "/api/payments", type: :request do
         expect(parsed_body).to eq({error: "payment not found"})
       end
     end
-
-    context "when without auth token" do
-      let(:request_headers) { {} }
-
-      it "returns error" do
-        expect(subject).to have_http_status(401)
-        expect(parsed_body).to eq(error: "X-Auth-Token is missing")
-      end
-    end
-
-    context "when invalid token" do
-      let(:request_headers) { {"X-Auth-Token" => "123"} }
-
-      it "return error" do
-        expect(subject).to have_http_status(401)
-        expect(parsed_body).to eq(error: "X-Auth-Token is invalid")
-      end
-    end
   end
 
   describe "POST /api/payments/:id/pay" do
@@ -368,7 +314,9 @@ RSpec.describe "/api/payments", type: :request do
       post "/api/payments/#{payment.id}/pay", headers: request_headers, as: :json
       response # returned value
     end
-    let(:request_headers) { {"X-Auth-Token" => "api-token"} }
+
+    include_context "requires authentification"
+
     let(:payment) do
       deal = Deal.create!(contract_number: "1", status: "open")
       payment_schedule = PaymentSchedule.create!(deal_id: deal.id)
@@ -394,24 +342,6 @@ RSpec.describe "/api/payments", type: :request do
         expect(parsed_body).to eq({error: "payment not found"})
         expect(PerformPaymentJob.jobs.size).to eq(0)
       end
-    end
-  end
-
-  context "when without auth token" do
-    let(:request_headers) { {} }
-
-    it "returns error" do
-      expect(subject).to have_http_status(401)
-      expect(parsed_body).to eq(error: "X-Auth-Token is missing")
-    end
-  end
-
-  context "when invalid token" do
-    let(:request_headers) { {"X-Auth-Token" => "123"} }
-
-    it "return error" do
-      expect(subject).to have_http_status(401)
-      expect(parsed_body).to eq(error: "X-Auth-Token is invalid")
     end
   end
 end

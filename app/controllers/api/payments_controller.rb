@@ -2,7 +2,19 @@ module Api
   class PaymentsController < ApplicationController
     def index
       authenticate!
+
       payments = Payment.all
+
+      if params[:status].present?
+        payments = payments.where(status: params[:status])
+      end
+      if params[:created_after].present?
+        payments = payments.where("created_at > ?", params[:created_after])
+      end
+      if params[:order_created_at].present?
+        payments = payments.order(created_at: params[:order_created_at])
+      end
+
       list = payments.map { |payment| serialize_payment(payment) }
       render json: list
     end
@@ -20,6 +32,7 @@ module Api
 
     def create
       authenticate!
+
       validation_result = Api::CreatePaymentValidator.new.call(payment_params.to_h)
       if validation_result.failure?
         return render json: {errors: validation_result.errors.to_h}, status: 400

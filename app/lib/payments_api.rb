@@ -35,9 +35,14 @@ class PaymentsApi
     response.body
   end
 
-  def update_payment
+  def update_payment(deal_id:, amount:, date:) # не обязательный аргумент *args
+    response = @connection.post("payments/#{id}") do |req| # подсветка id
+      req.body = {deal_id: deal_id, amount: amount, date: date, status: "pending"}.to_json
+    end
+    response.body
   end
 
-  def delete_payment
+  def delete_payment(id:)
+    @connection.delete("payments/#{id}").body
   end
 end

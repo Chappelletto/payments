@@ -15,6 +15,7 @@ gem "base64"
 gem "mutex_m"
 gem "redis"
 gem "aasm"
+gem "acts_as_paranoid", "~> 0.10.3"
 
 gem "pg"
 
@@ -42,6 +43,7 @@ end
 group :test do
   gem "rspec-rails", "~> 7.0.0"
   # gem "database_cleaner-active_record"
+  gem "webmock"
 end
 
 group :development do

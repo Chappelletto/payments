@@ -3,7 +3,7 @@ class PaymentsApi
     @connection = Faraday.new(ENV["PAYMENTS_BASE_URL"]) do |conn|
       conn.response :logger, Rails.logger
       conn.response :raise_error
-      conn.response :json
+      conn.response :json, parser_options: {symbolize_names: true}
 
       conn.request :json
 
@@ -35,9 +35,9 @@ class PaymentsApi
     response.body
   end
 
-  def update_payment(deal_id:, amount:, date:) # не обязательный аргумент *args
-    response = @connection.post("payments/#{id}") do |req| # подсветка id
-      req.body = {deal_id: deal_id, amount: amount, date: date, status: "pending"}.to_json
+  def update_payment(id:, params:)
+    response = @connection.patch("payments/#{id}") do |req|
+      req.body = params.to_json
     end
     response.body
   end

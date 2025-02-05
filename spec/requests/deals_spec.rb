@@ -147,8 +147,8 @@ RSpec.describe "/api/deals", type: :request do
         Deal.create!(contract_number: 500, status: "open")
       end
       it "return error" do
-        expect(create_deal_response).to have_http_status(404)
-        expect(parsed_body).to eq(error: "contract_number should be uniq")
+        expect(create_deal_response).to have_http_status(422)
+        expect(parsed_body).to eq(error: "contract number (500) should be uniq")
         expect(Deal.count).to eq(1)
       end
     end

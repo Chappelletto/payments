@@ -39,14 +39,10 @@ module Api
         return render json: {errors: validation_result.errors.to_h}, status: 400
       end
 
-      Deal.all.each do |deal|
-        if deal.contract_number.to_i == deal_params.to_h[:contract_number]
-          return render json: {error: "contract_number should be uniq"}, status: 404
-        end
-      end
-
-      deal = Deal.create!(validation_result.to_h)
+      deal = Deals::Create.new.call(validation_result.to_h)
       render json: serialize_deal(deal), status: 201
+    rescue Deals::ContractNumberAlreadyTakenError => error
+      render json: {error: "contract number (#{error.contract_number}) should be uniq"}, status: 422
     end
 
     def update
@@ -72,11 +68,7 @@ module Api
       deal = Deal.find_by(id: params[:id])
 
       if deal.present?
-        Deal.transaction do
-          deal.payment_schedule&.payments&.each(&:destroy!)
-          deal.payment_schedule&.destroy!
-          deal.destroy!
-        end
+        Deals::Delete.new.call(deal)
         render json: serialize_deal(deal)
       else
         render json: {error: "deal not found"}, status: 404

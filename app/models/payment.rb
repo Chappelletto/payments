@@ -12,6 +12,7 @@ class Payment < ApplicationRecord
       end
     end
   end
+
   enum :status, {pending: "pending", paid: "paid"}
   scope :status, -> { where(status: "paid") }
   belongs_to :payment_schedule, inverse_of: :payments

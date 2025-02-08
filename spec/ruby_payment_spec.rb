@@ -19,89 +19,26 @@ def find_payments_paid_with_overdue(payments) # найти все платежи
   paid_with_overdue
 end
 
-def find_next_payment(payments) # найти следующий срочный платёж (если платёж сегодня, то он срочный)
+def find_next_due_payment(payments) # найти следующий срочный платёж (если платёж сегодня, то он срочный)
   payments.each do |payment|
-    if payment[:paid_date] == nil
+    if (Date.parse(payment[:date]) >= Date.today) && payment[:paid_date].nil?
       return Date.parse(payment[:date])
     end
   end
   nil
 end
 
+# active_overdue_duration
 def find_time_of_overdue(payments) # определить продолжительность АКТИВНОЙ просрочки
   payments.each do |payment|
-    if payment[:paid_date] == nil
+    if (payment[:paid_date] == nil) && Date.parse(payment[:date]) < Date.today
       return (Date.parse(payment[:date]) - Date.today).to_i.abs
     end
   end
   nil
 end
 
-
-RSpec.describe do
-  subject(:time_of_overdue) do
-    find_time_of_overdue(payments)
-  end
-
-  let(:payments) do
-    [
-      {date: "2025-01-01", paid_date: "2025-01-01"},   #  - вовремя
-      {date: "2025-01-15", paid_date: "2025-01-20"},  # --  с просрочкой
-      {date: "2025-01-12", paid_date: nil}, #-- просрочен
-      {date: "2025-02-12", paid_date: nil}
-    ]
-  end
-
-  it "return overdue start date" do
-    expect(time_of_overdue).to eq(24)
-  end
-
-  context "all payments overdue" do
-    let(:payments) do
-      [
-        {date: "2025-01-01", paid_date: nil},
-        {date: "2025-01-15", paid_date: nil},
-        {date: "2025-01-12", paid_date: nil},
-        {date: "2025-02-12", paid_date: nil}
-      ]
-    end
-
-    it "return time of overdue" do
-      expect(time_of_overdue).to eq(35)
-    end
-  end
-
-  context "when all payment are paid" do
-    let(:payments) do
-      [
-        {date: "2025-01-01", paid_date: "2025-01-01"},
-        {date: "2025-01-15", paid_date: "2025-01-15"},
-        {date: "2025-01-12", paid_date: "2025-01-12"},
-        {date: "2025-02-12", paid_date: "2025-02-12"}
-      ]
-    end
-    it "returns nil" do
-      expect(time_of_overdue).to eq(nil)
-    end
-  end
-
-  # context "no overdue" do
-  #   let(:payments) do
-  #     [
-  #       {date: (Date.today + 1.month).to_s, paid_date: nil},
-  #       {date: (Date.today + 2.month).to_s, paid_date: nil},
-  #       {date: (Date.today + 3.month).to_s, paid_date: nil},
-  #       {date: (Date.today + 4.month).to_s, paid_date: nil}
-  #     ]
-  #   end
-  #   it "return nil" do
-  #     expect(time_of_overdue).to eq(nil)
-  #   end
-  # end
-end
-
-# на каждый случай отдельная функция и дискрайб
-
+# 1
 RSpec.describe do
   subject(:overdue_start_date) do
     find_overdue_start_date(payments)
@@ -164,6 +101,7 @@ RSpec.describe do
   end
 end
 
+# 2
 RSpec.describe do
   subject(:payments_paid_with_overdue) do
     find_payments_paid_with_overdue(payments)
@@ -226,10 +164,10 @@ RSpec.describe do
   end
 end
 
-
+# 3
 RSpec.describe do
-  subject(:next_payment) do
-    find_next_payment(payments)
+  subject(:next_due_payment) do
+    find_next_due_payment(payments)
   end
 
   let(:payments) do
@@ -241,8 +179,8 @@ RSpec.describe do
   ]
   end
 
-  it "return next payment" do
-    expect(next_payment).to eq(Date.new(2025, 1, 12))
+  it "return next due payment" do
+    expect(next_due_payment).to eq(Date.new(2025, 2, 12))
   end
 
   context "all payments overdue" do
@@ -256,7 +194,7 @@ RSpec.describe do
     end
 
     it "return first date" do
-      expect(next_payment).to eq(Date.new(2025, 1, 1))
+      expect(next_due_payment).to eq(Date.new(2025, 2, 12))
     end
   end
 
@@ -270,7 +208,7 @@ RSpec.describe do
       ]
     end
     it "returns nil" do
-      expect(next_payment).to eq(nil)
+      expect(next_due_payment).to eq(nil)
     end
   end
 
@@ -284,7 +222,70 @@ RSpec.describe do
       ]
     end
     it "return nil" do
-      expect(next_payment).to eq(Date.today + 1.month)
+      expect(next_due_payment).to eq(Date.today + 1.month)
+    end
+  end
+end
+
+# # 4
+RSpec.describe do
+  subject(:time_of_overdue) do
+    find_time_of_overdue(payments)
+  end
+
+  let(:payments) do
+    [
+      {date: "2025-01-01", paid_date: "2025-01-01"},   #  - вовремя
+      {date: "2025-01-15", paid_date: "2025-01-20"},  # --  с просрочкой
+      {date: "2025-01-12", paid_date: nil}, #-- просрочен
+      {date: "2025-02-12", paid_date: nil}
+    ]
+  end
+
+  it "return overdue start date" do
+    expect(time_of_overdue).to eq(25)
+  end
+
+  context "all payments overdue" do
+    let(:payments) do
+      [
+        {date: "2025-01-01", paid_date: nil},
+        {date: "2025-01-15", paid_date: nil},
+        {date: "2025-01-12", paid_date: nil},
+        {date: "2025-02-12", paid_date: nil}
+      ]
+    end
+
+    it "return time of overdue" do
+      expect(time_of_overdue).to eq(36)
+    end
+  end
+
+  context "when all payment are paid" do
+    let(:payments) do
+      [
+        {date: "2025-01-01", paid_date: "2025-01-01"},
+        {date: "2025-01-15", paid_date: "2025-01-15"},
+        {date: "2025-01-12", paid_date: "2025-01-12"},
+        {date: "2025-02-12", paid_date: "2025-02-12"}
+      ]
+    end
+    it "returns nil" do
+      expect(time_of_overdue).to eq(nil)
+    end
+  end
+
+  context "no overdue" do
+    let(:payments) do
+      [
+        {date: (Date.today + 1.month).to_s, paid_date: nil},
+        {date: (Date.today + 2.month).to_s, paid_date: nil},
+        {date: (Date.today + 3.month).to_s, paid_date: nil},
+        {date: (Date.today + 4.month).to_s, paid_date: nil}
+      ]
+    end
+    it "return nil" do
+      expect(time_of_overdue).to eq(nil)
     end
   end
 end

@@ -22,14 +22,14 @@ end
 def find_next_due_payment(payments) # найти следующий срочный платёж (если платёж сегодня, то он срочный)
   payments.each do |payment|
     if (Date.parse(payment[:date]) >= Date.today) && payment[:paid_date].nil?
-      return Date.parse(payment[:date])
+      return payment
     end
   end
   nil
 end
 
 # active_overdue_duration
-def find_time_of_overdue(payments) # определить продолжительность АКТИВНОЙ просрочки
+def active_overdue_duration(payments) # определить продолжительность АКТИВНОЙ просрочки
   payments.each do |payment|
     if (payment[:paid_date] == nil) && Date.parse(payment[:date]) < Date.today
       return (Date.parse(payment[:date]) - Date.today).to_i.abs
@@ -229,8 +229,8 @@ end
 
 # # 4
 RSpec.describe do
-  subject(:time_of_overdue) do
-    find_time_of_overdue(payments)
+  subject(:overdue_duration) do
+    active_overdue_duration(payments)
   end
 
   let(:payments) do
@@ -243,7 +243,7 @@ RSpec.describe do
   end
 
   it "return overdue start date" do
-    expect(time_of_overdue).to eq(25)
+    expect(overdue_duration).to eq(25)
   end
 
   context "all payments overdue" do
@@ -257,7 +257,7 @@ RSpec.describe do
     end
 
     it "return time of overdue" do
-      expect(time_of_overdue).to eq(36)
+      expect(overdue_duration).to eq(36)
     end
   end
 
@@ -271,7 +271,7 @@ RSpec.describe do
       ]
     end
     it "returns nil" do
-      expect(time_of_overdue).to eq(nil)
+      expect(overdue_duration).to eq(nil)
     end
   end
 
@@ -285,7 +285,7 @@ RSpec.describe do
       ]
     end
     it "return nil" do
-      expect(time_of_overdue).to eq(nil)
+      expect(overdue_duration).to eq(nil)
     end
   end
 end

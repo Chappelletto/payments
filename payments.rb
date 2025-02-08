@@ -22,12 +22,13 @@ data = [
   {date: "2025-02-24", paid_date: nil} #-- не наступил -
 ]
 
-def find_time_of_overdue(payments) # определить продолжительность АКТИВНОЙ просрочки
+def find_next_due_payment(payments) # найти следующий срочный платёж (если платёж сегодня, то он срочный)
   payments.each do |payment|
-    if payment[:paid_date] == nil
-      return (Date.parse(payment[:date]) - Date.today).to_i.abs
+    if (Date.parse(payment[:date]) >= Date.today) && payment[:paid_date].nil?
+      return payment
     end
   end
+  nil
 end
 
-pp find_time_of_overdue(data)
+pp find_next_due_payment(data)

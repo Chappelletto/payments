@@ -7,7 +7,7 @@ def find_overdue_start_date(payments)
   nil
 end
 
-def find_payment_paid_with_overdue(payments) # найти все платежи оплаченные с просрочкой
+def find_payments_paid_with_overdue(payments) # найти все платежи оплаченные с просрочкой
   paid_with_overdue = []
   payments.each do |payment|
     if payment[:paid_date].nil?
@@ -16,12 +16,7 @@ def find_payment_paid_with_overdue(payments) # найти все платежи 
       paid_with_overdue << payment
     end
   end
-
-  if paid_with_overdue == []
-    nil
-  else
-    Date.parse(paid_with_overdue[0][:date])
-  end
+  paid_with_overdue
 end
 
 def find_next_payment(payments) # найти следующий срочный платёж (если платёж сегодня, то он срочный)
@@ -170,8 +165,8 @@ RSpec.describe do
 end
 
 RSpec.describe do
-  subject(:payment_paid_with_overdue) do
-    find_payment_paid_with_overdue(payments)
+  subject(:payments_paid_with_overdue) do
+    find_payments_paid_with_overdue(payments)
   end
 
   let(:payments) do
@@ -183,8 +178,8 @@ RSpec.describe do
     ]
   end
 
-  it "return payment_paid_with_overdue" do
-    expect(payment_paid_with_overdue).to eq(Date.new(2025, 1, 15))
+  it "return payments_paid_with_overdue" do
+    expect(payments_paid_with_overdue).to eq([{:date=>"2025-01-15", :paid_date=>"2025-01-20"}])
   end
 
   context "all payments overdue" do
@@ -198,7 +193,7 @@ RSpec.describe do
     end
 
     it "return nil" do
-      expect(payment_paid_with_overdue).to eq(nil)
+      expect(payments_paid_with_overdue).to eq([])
     end
   end
 
@@ -211,8 +206,8 @@ RSpec.describe do
         {date: "2025-02-12", paid_date: "2025-02-12"}
       ]
     end
-    it "returns nil" do
-      expect(payment_paid_with_overdue).to eq(nil)
+    it "returns []" do
+      expect(payments_paid_with_overdue).to eq([])
     end
   end
 
@@ -225,8 +220,8 @@ RSpec.describe do
         {date: (Date.today + 4.month).to_s, paid_date: nil}
       ]
     end
-    it "return nil" do
-      expect(payment_paid_with_overdue).to eq(nil)
+    it "return []" do
+      expect(payments_paid_with_overdue).to eq([])
     end
   end
 end

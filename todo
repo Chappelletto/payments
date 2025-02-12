@@ -191,6 +191,7 @@ rails generate migration AddDeletedAtToUsers deleted_at:datetime:index
 
 КОГДА-ТО БУДЕМ ДЕЛАТЬ
 1. deals -> переходы по статусам (signing ---signed---> payment_reception ---close---> closed | terminated)
+
 2. applications -> заведение заявки, её заполнение (можно шагом добавить верификацию) и переход в сделку
   created -> verification -> accepted (в этот момент создаётся сделка в signing)
 3. API-client к заявке/сделке

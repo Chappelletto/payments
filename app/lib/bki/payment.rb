@@ -1,0 +1,24 @@
+module Bki
+  class Payment
+    def initialize(date, paid_date)
+      @date = date
+      @paid_date = paid_date
+    end
+
+    def due? # срочный он или нет?
+      @date >= Date.today
+    end
+
+    def paid? # оплачен он или нет?
+      @paid_date.present?
+    end
+
+    def active_overdue? # есть ли по нему активная просрочка?
+      !paid? && !due?
+    end
+
+    def paid_with_overdue? # оплачен с просрочкой?
+      paid? && (@paid_date > @date)
+    end
+  end
+end

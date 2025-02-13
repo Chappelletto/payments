@@ -22,7 +22,7 @@ end
 def find_next_due_payment(payments) # найти следующий срочный платёж (если платёж сегодня, то он срочный)
   payments.each do |payment|
     if (Date.parse(payment[:date]) >= Date.today) && payment[:paid_date].nil?
-      return payment
+      return Date.parse(payment[:date])
     end
   end
   nil
@@ -175,12 +175,12 @@ RSpec.describe do
     {date: "2025-01-01", paid_date: "2025-01-01"},   #  - вовремя
     {date: "2025-01-15", paid_date: "2025-01-20"},  # --  с просрочкой
     {date: "2025-01-12", paid_date: nil}, #-- просрочен
-    {date: "2025-02-12", paid_date: nil}
+    {date: "2025-02-28", paid_date: nil}
   ]
   end
 
   it "return next due payment" do
-    expect(next_due_payment).to eq(Date.new(2025, 2, 12))
+    expect(next_due_payment).to eq(Date.new(2025, 2, 28))
   end
 
   context "all payments overdue" do
@@ -189,12 +189,12 @@ RSpec.describe do
         {date: "2025-01-01", paid_date: nil},
         {date: "2025-01-15", paid_date: nil},
         {date: "2025-01-12", paid_date: nil},
-        {date: "2025-02-12", paid_date: nil}
+        {date: "2025-02-28", paid_date: nil}
       ]
     end
 
     it "return first date" do
-      expect(next_due_payment).to eq(Date.new(2025, 2, 12))
+      expect(next_due_payment).to eq(Date.new(2025, 2, 28))
     end
   end
 
@@ -243,7 +243,7 @@ RSpec.describe do
   end
 
   it "return overdue start date" do
-    expect(overdue_duration).to eq(25)
+    expect(overdue_duration).to eq((Date.today - Date.new(2025, 1, 12)).to_i)
   end
 
   context "all payments overdue" do
@@ -257,7 +257,7 @@ RSpec.describe do
     end
 
     it "return time of overdue" do
-      expect(overdue_duration).to eq(36)
+      expect(overdue_duration).to eq((Date.today - Date.new(2025, 1, 1)).to_i)
     end
   end
 

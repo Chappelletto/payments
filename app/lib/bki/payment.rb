@@ -1,5 +1,7 @@
 module Bki
   class Payment
+    attr_accessor :date, :paid_date
+
     def initialize(date, paid_date)
       @date = date
       @paid_date = paid_date

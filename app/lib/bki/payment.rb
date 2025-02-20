@@ -22,5 +22,11 @@ module Bki
     def paid_with_overdue? # оплачен с просрочкой?
       paid? && (@paid_date > @date)
     end
+
+    def overdue_duration
+      return if !active_overdue?
+
+      (Date.today - date).to_i
+    end
   end
 end

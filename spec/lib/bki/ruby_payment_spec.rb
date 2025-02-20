@@ -1,39 +1,18 @@
 def find_overdue_start_date(payments) # найти дату начала просрочки
-  payments.each do |payment|
-    if payment.active_overdue? && !payment.paid?
-      return payment.date
-    end
-  end
-  nil
+  payments.find { |payment| payment.active_overdue? && !payment.paid? }&.date
 end
 
 def find_payments_paid_with_overdue(payments) # найти все платежи оплаченные с просрочкой
-  payments_with_overdue = []
-  payments.each do |payment|
-    if payment.paid_with_overdue?
-      payments_with_overdue << payment.date
-    end
-  end
-  payments_with_overdue
+  payments.select(&:paid_with_overdue?)
 end
 
 def find_next_due_payment(payments) # найти следующий срочный платёж (если платёж сегодня, то он срочный)
-  payments.each do |payment|
-    if payment.due?
-      return payment.date
-    end
-  end
-  nil
+  payments.find(&:due?)
 end
 
 # active_overdue_duration
 def active_overdue_duration(payments) # определить продолжительность АКТИВНОЙ просрочки
-  payments.each do |payment|
-    if payment.active_overdue?
-      return (payment.date - Date.today).to_i.abs
-    end
-  end
-  nil
+  payments.find(&:active_overdue?)&.overdue_duration
 end
 
 # 1
@@ -85,7 +64,7 @@ RSpec.describe Bki::Payment do
       end
     end
 
-    context "no overdue" do
+    context "when all payments are due" do
       let(:payments) do
         [
           Bki::Payment.new(Date.today + 1.month, nil),
@@ -117,10 +96,10 @@ describe "#payments_paid_with_overdue" do
   end
 
   it "return payments_paid_with_overdue" do
-    expect(payments_paid_with_overdue).to eq([Date.new(2025, 1, 15)])
+    expect(payments_paid_with_overdue).to eq([payments[1]])
   end
 
-  context "all payments overdue" do
+  context "when there are no paid payments" do
     let(:payments) do
       [
         Bki::Payment.new(Date.new(2025, 1, 1), nil),
@@ -135,7 +114,7 @@ describe "#payments_paid_with_overdue" do
     end
   end
 
-  context "when all payment are paid" do
+  context "when all payment are paid without overdue" do
     let(:payments) do
       [
         Bki::Payment.new(Date.new(2025, 1, 1), Date.new(2025, 1, 1)),
@@ -145,20 +124,6 @@ describe "#payments_paid_with_overdue" do
       ]
     end
     it "returns []" do
-      expect(payments_paid_with_overdue).to eq([])
-    end
-  end
-
-  context "no overdue" do
-    let(:payments) do
-      [
-        Bki::Payment.new(Date.today + 1.month, nil),
-        Bki::Payment.new(Date.today + 2.month, nil),
-        Bki::Payment.new(Date.today + 3.month, nil),
-        Bki::Payment.new(Date.today + 4.month, nil)
-      ]
-    end
-    it "return []" do
       expect(payments_paid_with_overdue).to eq([])
     end
   end
@@ -180,7 +145,7 @@ describe "#next_due_payment" do
   end
 
   it "return next due payment" do
-    expect(next_due_payment).to eq(Date.new(2025, 2, 28))
+    expect(next_due_payment).to eq(payments[3])
   end
 
   context "all payments overdue" do
@@ -194,7 +159,7 @@ describe "#next_due_payment" do
     end
 
     it "return first date" do
-      expect(next_due_payment).to eq(Date.new(2025, 2, 28))
+      expect(next_due_payment).to eq(payments[3])
     end
   end
 
@@ -212,7 +177,7 @@ describe "#next_due_payment" do
     end
   end
 
-  context "no overdue" do
+  context "when all payments are due" do
     let(:payments) do
       [
         Bki::Payment.new(Date.today + 1.month, nil),
@@ -222,7 +187,7 @@ describe "#next_due_payment" do
       ]
     end
     it "return nil" do
-      expect(next_due_payment).to eq(Date.today + 1.month)
+      expect(next_due_payment).to eq(payments[0])
     end
   end
 end
@@ -270,12 +235,13 @@ describe "#overdue_duration" do
         Bki::Payment.new(Date.new(2025, 2, 12), Date.new(2025, 2, 12))
       ]
     end
+
     it "returns nil" do
       expect(overdue_duration).to eq(nil)
     end
   end
 
-  context "no overdue" do
+  context "whe all payments are due" do
     let(:payments) do
       [
         Bki::Payment.new(Date.today + 1.month, nil),
@@ -284,6 +250,7 @@ describe "#overdue_duration" do
         Bki::Payment.new(Date.today + 4.month, nil)
       ]
     end
+
     it "return nil" do
       expect(overdue_duration).to eq(nil)
     end

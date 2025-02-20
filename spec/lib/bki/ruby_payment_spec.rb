@@ -1,6 +1,6 @@
 def find_overdue_start_date(payments) # найти дату начала просрочки
   payments.each do |payment|
-    if (Date.today > payment.date) && (payment.paid_date.nil?)
+    if payment.active_overdue? && !payment.paid?
       return payment.date
     end
   end
@@ -10,9 +10,7 @@ end
 def find_payments_paid_with_overdue(payments) # найти все платежи оплаченные с просрочкой
   payments_with_overdue = []
   payments.each do |payment|
-    if payment.paid_date.nil?
-      break
-    elsif payment.paid_date > payment.date
+    if payment.paid_with_overdue?
       payments_with_overdue << payment.date
     end
   end
@@ -21,7 +19,7 @@ end
 
 def find_next_due_payment(payments) # найти следующий срочный платёж (если платёж сегодня, то он срочный)
   payments.each do |payment|
-    if (payment.date >= Date.today) && payment.paid_date.nil?
+    if payment.due?
       return payment.date
     end
   end
@@ -31,7 +29,7 @@ end
 # active_overdue_duration
 def active_overdue_duration(payments) # определить продолжительность АКТИВНОЙ просрочки
   payments.each do |payment|
-    if payment.paid_date.nil? && payment.date < Date.today
+    if payment.active_overdue?
       return (payment.date - Date.today).to_i.abs
     end
   end

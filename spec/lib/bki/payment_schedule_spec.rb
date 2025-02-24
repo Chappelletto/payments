@@ -1,34 +1,16 @@
-def find_overdue_start_date(payments) # найти дату начала просрочки
-  payments.find { |payment| payment.active_overdue? && !payment.paid? }&.date
-end
-
-def find_payments_paid_with_overdue(payments) # найти все платежи оплаченные с просрочкой
-  payments.select(&:paid_with_overdue?)
-end
-
-def find_next_due_payment(payments) # найти следующий срочный платёж (если платёж сегодня, то он срочный)
-  payments.find(&:due?)
-end
-
-# active_overdue_duration
-def active_overdue_duration(payments) # определить продолжительность АКТИВНОЙ просрочки
-  payments.find(&:active_overdue?)&.overdue_duration
-end
-
-# 1
-RSpec.describe Bki::Payment do
+RSpec.describe Bki::PaymentsSchedule do
   describe "#find_overdue_start_date" do
-    let(:payments) do
+    let(:payments_schedule) do
       [
         Bki::Payment.new(Date.today, Date.today),   #  - вовремя
-        Bki::Payment.new(Date.today, Date.today + 1),  # --  с просрочкой
+        Bki::Payment.new(Date.today, Date.today + 1),  # --  с просрочкойfind_overdue_start_date
         Bki::Payment.new(Date.today - 5, nil), #-- просрочен
         Bki::Payment.new(Date.today, Date.today)
       ]
     end
 
     subject(:overdue_start_date) do
-      find_overdue_start_date(payments)
+      Bki::PaymentsSchedule.new(payments_schedule).find_overdue_start_date
     end
 
     it "return overdue start date" do
@@ -36,7 +18,7 @@ RSpec.describe Bki::Payment do
     end
 
     context "all payments overdue" do
-      let(:payments) do
+      let(:payments_schedule) do
         [
           Bki::Payment.new(Date.new(2025, 1, 1), nil),
           Bki::Payment.new(Date.new(2025, 1, 12), nil),
@@ -51,7 +33,7 @@ RSpec.describe Bki::Payment do
     end
 
     context "when all payment are paid" do
-      let(:payments) do
+      let(:payments_schedule) do
         [
           Bki::Payment.new(Date.new(2025, 1, 1), Date.new(2025, 1, 1)),
           Bki::Payment.new(Date.new(2025, 1, 12), Date.new(2025, 1, 12)),
@@ -65,7 +47,7 @@ RSpec.describe Bki::Payment do
     end
 
     context "when all payments are due" do
-      let(:payments) do
+      let(:payments_schedule) do
         [
           Bki::Payment.new(Date.today + 1.month, nil),
           Bki::Payment.new(Date.today + 2.month, nil),
@@ -83,10 +65,10 @@ end
 # 2
 describe "#payments_paid_with_overdue" do
   subject(:payments_paid_with_overdue) do
-    find_payments_paid_with_overdue(payments)
+    Bki::PaymentsSchedule.new(payments_schedule).find_payments_paid_with_overdue
   end
 
-  let(:payments) do
+  let(:payments_schedule) do
     [
       Bki::Payment.new(Date.new(2025, 1, 1), Date.new(2025, 1, 1)),   #  - вовремя
       Bki::Payment.new(Date.new(2025, 1, 15), Date.new(2025, 1, 20)),  # --  с просрочкой
@@ -96,11 +78,11 @@ describe "#payments_paid_with_overdue" do
   end
 
   it "return payments_paid_with_overdue" do
-    expect(payments_paid_with_overdue).to eq([payments[1]])
+    expect(payments_paid_with_overdue).to eq([payments_schedule[1]])
   end
 
   context "when there are no paid payments" do
-    let(:payments) do
+    let(:payments_schedule) do
       [
         Bki::Payment.new(Date.new(2025, 1, 1), nil),
         Bki::Payment.new(Date.new(2025, 1, 12), nil),
@@ -115,7 +97,7 @@ describe "#payments_paid_with_overdue" do
   end
 
   context "when all payment are paid without overdue" do
-    let(:payments) do
+    let(:payments_schedule) do
       [
         Bki::Payment.new(Date.new(2025, 1, 1), Date.new(2025, 1, 1)),
         Bki::Payment.new(Date.new(2025, 1, 12), Date.new(2025, 1, 12)),
@@ -132,10 +114,10 @@ end
 # # # 3
 describe "#next_due_payment" do
   subject(:next_due_payment) do
-    find_next_due_payment(payments)
+    Bki::PaymentsSchedule.new(payments_schedule).find_next_due_payment
   end
 
-  let(:payments) do
+  let(:payments_schedule) do
     [
       Bki::Payment.new(Date.new(2025, 1, 1), Date.new(2025, 1, 1)),   #  - вовремя
       Bki::Payment.new(Date.new(2025, 1, 15), Date.new(2025, 1, 20)),  # --  с просрочкой
@@ -145,11 +127,11 @@ describe "#next_due_payment" do
   end
 
   it "return next due payment" do
-    expect(next_due_payment).to eq(payments[3])
+    expect(next_due_payment).to eq(payments_schedule[3])
   end
 
   context "all payments overdue" do
-    let(:payments) do
+    let(:payments_schedule) do
       [
         Bki::Payment.new(Date.new(2025, 1, 1), nil),   #  - вовремя
         Bki::Payment.new(Date.new(2025, 1, 15), nil),  # --  с просрочкой
@@ -159,12 +141,12 @@ describe "#next_due_payment" do
     end
 
     it "return first date" do
-      expect(next_due_payment).to eq(payments[3])
+      expect(next_due_payment).to eq(payments_schedule[3])
     end
   end
 
   context "when all payment are paid" do
-    let(:payments) do
+    let(:payments_schedule) do
       [
         Bki::Payment.new(Date.new(2025, 1, 1), Date.new(2025, 1, 1)),
         Bki::Payment.new(Date.new(2025, 1, 12), Date.new(2025, 1, 12)),
@@ -178,7 +160,7 @@ describe "#next_due_payment" do
   end
 
   context "when all payments are due" do
-    let(:payments) do
+    let(:payments_schedule) do
       [
         Bki::Payment.new(Date.today + 1.month, nil),
         Bki::Payment.new(Date.today + 2.month, nil),
@@ -187,7 +169,7 @@ describe "#next_due_payment" do
       ]
     end
     it "return nil" do
-      expect(next_due_payment).to eq(payments[0])
+      expect(next_due_payment).to eq(payments_schedule[0])
     end
   end
 end
@@ -195,10 +177,10 @@ end
 # # 4
 describe "#overdue_duration" do
   subject(:overdue_duration) do
-    active_overdue_duration(payments)
+    Bki::PaymentsSchedule.new(payments_schedule).active_overdue_duration
   end
 
-  let(:payments) do
+  let(:payments_schedule) do
     [
       Bki::Payment.new(Date.new(2025, 1, 1), Date.new(2025, 1, 1)),   #  - вовремя
       Bki::Payment.new(Date.new(2025, 1, 15), Date.new(2025, 1, 20)),  # --  с просрочкой
@@ -212,7 +194,7 @@ describe "#overdue_duration" do
   end
 
   context "all payments overdue" do
-    let(:payments) do
+    let(:payments_schedule) do
       [
         Bki::Payment.new(Date.new(2025, 1, 1), nil),   #  - вовремя
         Bki::Payment.new(Date.new(2025, 1, 15), nil),  # --  с просрочкой
@@ -227,7 +209,7 @@ describe "#overdue_duration" do
   end
 
   context "when all payment are paid" do
-    let(:payments) do
+    let(:payments_schedule) do
       [
         Bki::Payment.new(Date.new(2025, 1, 1), Date.new(2025, 1, 1)),
         Bki::Payment.new(Date.new(2025, 1, 12), Date.new(2025, 1, 12)),
@@ -242,7 +224,7 @@ describe "#overdue_duration" do
   end
 
   context "whe all payments are due" do
-    let(:payments) do
+    let(:payments_schedule) do
       [
         Bki::Payment.new(Date.today + 1.month, nil),
         Bki::Payment.new(Date.today + 2.month, nil),

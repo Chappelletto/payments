@@ -140,4 +140,26 @@ RSpec.describe Bki::Payment do
       end
     end
   end
+
+  #----------------------------
+  describe "#over_overdue?" do
+    let(:payment) { Bki::Payment.new(Date.today - 5, Date.today) }
+    let(:next_payment) { Bki::Payment.new(Date.today - 2, nil) }
+
+    subject(:over_overdue) do
+      payment.over_overdue?(next_payment)
+    end
+
+    it "paid_with_overdue" do
+      expect(over_overdue).to eq(true)
+    end
+
+    # context "no_overdue" do
+    #   let(:payment) { Bki::Payment.new(Date.today, Date.today) }
+
+    #   it "no_overdue" do
+    #     expect(paid_with_overdue).to eq(false)
+    #   end
+    # end
+  end
 end

@@ -28,5 +28,9 @@ module Bki
 
       (Date.today - date).to_i
     end
+
+    def over_overdue?(next_payment)
+      paid_date > next_payment.date
+    end
   end
 end

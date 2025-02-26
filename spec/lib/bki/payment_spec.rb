@@ -142,6 +142,7 @@ RSpec.describe Bki::Payment do
   end
 
   #----------------------------
+
   describe "#continuous_overdue?" do
     let(:payment) { Bki::Payment.new(Date.today - 5, Date.today) }
     let(:next_payment) { Bki::Payment.new(Date.today - 2, nil) }
@@ -154,8 +155,19 @@ RSpec.describe Bki::Payment do
       expect(continuous_overdue).to eq(true)
     end
 
-    context "paid in day next payment" do
-      let(:payment) { Bki::Payment.new(Date.today, Date.today) }
+    # оба платежа оплачены в срок?
+    context "payments paid no overdue" do
+      let(:payment) { Bki::Payment.new(Date.today - 5, Date.today - 5) }
+      let(:next_payment) { Bki::Payment.new(Date.today - 1, Date.today - 1) }
+
+      it "return false" do
+        expect(continuous_overdue).to eq(false)
+      end
+    end
+
+    # текущий платёж не оплачен?
+    context "current payment not paid" do
+      let(:payment) { Bki::Payment.new(Date.today - 1, Date.today - 1) }
       let(:next_payment) { Bki::Payment.new(Date.today, nil) }
 
       it "return false" do
@@ -163,9 +175,20 @@ RSpec.describe Bki::Payment do
       end
     end
 
-    context "no continuous_overdue" do
+    # оба платежа ещё не наступили?
+    context "payment date has not arrived" do
+      let(:payment) { Bki::Payment.new(Date.today + 1, nil) }
+      let(:next_payment) { Bki::Payment.new(Date.today + 5, nil) }
+
+      it "return false" do
+        expect(continuous_overdue).to eq(false)
+      end
+    end
+
+    # текущий платёж оплачен без просрочки?
+    context "current payment paid no overdue" do
       let(:payment) { Bki::Payment.new(Date.today - 1, Date.today - 1) }
-      let(:next_payment) { Bki::Payment.new(Date.today, nil) }
+      let(:next_payment) { Bki::Payment.new(Date.today + 5, nil) }
 
       it "return false" do
         expect(continuous_overdue).to eq(false)

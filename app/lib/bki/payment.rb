@@ -30,6 +30,7 @@ module Bki
     end
 
     def continuous_overdue?(next_payment)
+      return true if paid_date.nil? && next_payment.paid_date.nil? && Date.today > date
       return false if paid_date.nil?
       paid_date > next_payment.date
     end

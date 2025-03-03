@@ -204,5 +204,15 @@ RSpec.describe Bki::Payment do
         expect(continuous_overdue).to eq(true)
       end
     end
+
+    # нарушения порядка, когда текущий платёж позже того, что передали артументом
+    context "not paid with overdue" do
+      let(:payment) { Bki::Payment.new(Date.today + 5, nil) }
+      let(:next_payment) { Bki::Payment.new(Date.today - 3, nil) }
+
+      it "return true" do
+        expect(continuous_overdue).to eq(false)
+      end
+    end
   end
 end

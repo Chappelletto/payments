@@ -29,10 +29,25 @@ module Bki
       (Date.today - date).to_i
     end
 
+    def paid_in_time?
+      return false if @paid_date.nil?
+      @paid_date <= @date
+    end
+
+    # def continuous_overdue?(next_payment)
+    #   return false if date > next_payment.date # платежи не идут друг за другом
+    #   return true if active_overdue? && !next_payment.paid?
+    #   return false if !paid?
+    #   paid_date > next_payment.date
+    # end
+
     def continuous_overdue?(next_payment)
-      return true if paid_date.nil? && next_payment.paid_date.nil? && Date.today > date
-      return false if paid_date.nil?
-      paid_date > next_payment.date
+      return false if date > next_payment.date # платежи не идут друг за другом
+      return false if due? || paid_in_time? # у платежа нет или не было просрочки
+
+      # строим интервалы [дата_платежа; дата_оплаты) и проверяем пересекаются ли они
+      # если они пересеклись, то мы получили просрочку "в нахлёст"
+      (date...paid_date).overlap?(next_payment.date...next_payment.paid_date)
     end
   end
 end

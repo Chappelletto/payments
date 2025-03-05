@@ -1,6 +1,6 @@
 # Git
 
-## Новая ветка
+## Новая веткаUntitled
 1. переключаемся в main - `git checkout main`
 2. обновляем локальную версию ветки `main` - `git pull origin main`
 3. создаём новую ветку - `git checkout -b branch_name`

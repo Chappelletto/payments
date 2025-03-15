@@ -122,7 +122,7 @@ describe "#next_due_payment" do
       Bki::Payment.new(Date.new(2025, 1, 1), Date.new(2025, 1, 1)),   #  - вовремя
       Bki::Payment.new(Date.new(2025, 1, 15), Date.new(2025, 1, 20)),  # --  с просрочкой
       Bki::Payment.new(Date.new(2025, 1, 12), nil), #-- просрочен
-      Bki::Payment.new(Date.new(2025, 2, 28), nil)
+      Bki::Payment.new(Date.today + 1.day, nil)
     ]
   end
 
@@ -136,7 +136,7 @@ describe "#next_due_payment" do
         Bki::Payment.new(Date.new(2025, 1, 1), nil),   #  - вовремя
         Bki::Payment.new(Date.new(2025, 1, 15), nil),  # --  с просрочкой
         Bki::Payment.new(Date.new(2025, 1, 12), nil), #-- просрочен
-        Bki::Payment.new(Date.new(2025, 2, 28), nil)
+        Bki::Payment.new(Date.today + 1.day, nil)
       ]
     end
 

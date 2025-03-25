@@ -238,3 +238,54 @@ describe "#overdue_duration" do
     end
   end
 end
+
+# interval
+describe "#interval_paid_overdue" do
+  subject(:interval_paid_overdue) do
+    Bki::PaymentsSchedule.new(payments).interval_paid_overdue
+  end
+
+  let(:payments) do
+    [
+      Bki::Payment.new(Date.new(2025, 1, 1), Date.new(2025, 1, 1)),   #  - вовремя
+      Bki::Payment.new(Date.new(2025, 2, 1), Date.new(2025, 3, 5)),  # --  с просрочкой
+      Bki::Payment.new(Date.new(2025, 3, 1), Date.new(2025, 4, 5)),
+      Bki::Payment.new(Date.new(2025, 4, 1), Date.new(2025, 4, 20)),
+      Bki::Payment.new(Date.new(2025, 5, 22), nil)
+    ]
+  end
+
+  it "return interval_paid_overdue" do
+    expect(interval_paid_overdue).to eq([Date.new(2025, 2, 1), Date.new(2025, 4, 5)])
+  end
+
+  context "all payments overdue" do
+    let(:payments) do
+      [
+        Bki::Payment.new(Date.new(2025, 1, 1), nil),
+        Bki::Payment.new(Date.new(2025, 1, 15), nil),
+        Bki::Payment.new(Date.new(2025, 1, 12), nil),
+        Bki::Payment.new(Date.new(2025, 2, 28), nil)
+      ]
+    end
+
+    it "all payments overdue empty array" do
+      expect(interval_paid_overdue).to eq(nil)
+    end
+  end
+
+  context "when all payment are paid" do
+    let(:payments) do
+      [
+        Bki::Payment.new(Date.new(2025, 1, 1), Date.new(2025, 1, 1)),
+        Bki::Payment.new(Date.new(2025, 1, 12), Date.new(2025, 1, 12)),
+        Bki::Payment.new(Date.new(2025, 1, 15), Date.new(2025, 1, 15)),
+        Bki::Payment.new(Date.new(2025, 2, 12), Date.new(2025, 2, 12))
+      ]
+    end
+
+    it "returns nil" do
+      expect(interval_paid_overdue).to eq(nil)
+    end
+  end
+end

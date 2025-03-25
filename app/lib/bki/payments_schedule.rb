@@ -18,60 +18,49 @@ module Bki
       payments.find(&:due?)
     end
 
-    # active_overdue_duration
-
     def active_overdue_duration # определить продолжительность АКТИВНОЙ просрочки
       payments.find(&:active_overdue?)&.overdue_duration
     end
 
-    # интервал последней погашенной просрочки (дата начала, дата конца) дата начала просрочки? и дата оплаты в срок?
+      # интервал последней погашенной просрочки (дата начала, дата конца) дата начала просрочки? и дата оплаты в срок?
 
-    #     Для этого нужно:
-    #исключаем из списка платежей оплаты вовремя и не наступившие платежи
-    # payments.reject { |payment| payment.paid_in_time? || payment.due? }
-    # payments.select { |payment| payment.paid_with_overdue? || payment.active_overdue? }
-      #     собрать ВСЕ интервалы, в которых платежи просачивались в нахлёст и были погашены
-      #     исключаем из этого набора интервал, где есть активная просрочка (эта просрочка ещё не погашена)
-      #     берём последний интервал
+      # Для этого нужно:
+      # исключаем из списка платежей оплаты вовремя и не наступившие платежи
+      # собрать ВСЕ интервалы, в которых платежи просачивались в нахлёсти были погашены
+      # исключаем из этого набора интервал, где есть активная просрочка (эта просрочка ещё не погашена)
+      # берём последний интервал
 
-    # В довесок:
+      # В довесок:
       #   нужно определять продолжительность интервала
-      #     нужно определять начало интервала
+      #   нужно определять начало интервала
 
     def interval_paid_overdue
-      byebug
-      payments.each_cons(2) do |current_payment, next_payment|
-        # pp "current_payment=#{current_payment}, next_payment = #{next_payment}"
-        # pp next_payment
-        if (current_payment.continuous_overdue?(next_payment.date)) && !(current_payment.active_overdue?) #current_payment - это объект
-          begin_date_overdue = current_payment.date
-        else
-          end_date_overdue = current_payment.paid_date
+      result = []
+      # исключаем из списка платежей оплаты вовремя и не наступившие платежи
+      payments_1 = payments.reject { |payment| payment.paid_in_time? || payment.due? }
+      # собрать ВСЕ интервалы, в которых платежи просачивались в нахлёст
+      payments_1.each_cons(2) do |current_payment, next_payment|
+        if current_payment.continuous_overdue?(next_payment)
+          result << current_payment
+          result << next_payment
         end
       end
+      result.reject { |payment| payment.active_overdue? }
+      if result == [nil, nil]
+        return result = []
+      end
 
-    #   # (date...paid_date).overlap?(next_payment.date...next_payment.paid_date)
+      if !result[0]&.paid_date.nil?
+        begin_date = result[0].date
+      else
+        return nil
+      end
+      end_date = result[-1]&.paid_date
 
-    #   return [begin_date_overdue, end_date_overdue]
+      result = [begin_date, end_date]
+      days_diff = (end_date - begin_date).to_i
+      puts "Начало интервала #{result[0]}, продолжительность = #{days_diff}"
+      result
     end
-
-    # def interval_paid_overdue
-    #   result = []
-    #   payments.each_cons(2) do |current_payment, next_payment|
-    #     if (current_payment.date...current_payment.paid_date).overlap?(next_payment.date...next_payment.paid_date)
-    #       begin_date_overdue = current_payment.date
-    #     else
-    #       end_date_overdue = current_payment.paid_date
-    #     end
-    #       pp [begin_date_overdue, end_date_overdue]
-    #   end
-    # end
   end
 end
-
-[
-  Bki::Payment.new(Date.new(2025, 1, 1), Date.new(2025, 1, 1)),
-  Bki::Payment.new(Date.new(2025, 1, 12), Date.new(2025, 1, 17)),
-  Bki::Payment.new(Date.new(2025, 1, 15), Date.new(2025, 1, 28)),
-  Bki::Payment.new(Date.new(2025, 2, 12), Date.new(2025, 2, 12))
-]

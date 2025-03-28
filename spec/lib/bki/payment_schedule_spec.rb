@@ -249,14 +249,14 @@ describe "#interval_paid_overdue" do
     [
       Bki::Payment.new(Date.new(2025, 1, 1), Date.new(2025, 1, 1)),   #  - вовремя
       Bki::Payment.new(Date.new(2025, 2, 1), Date.new(2025, 3, 5)),  # --  с просрочкой
-      Bki::Payment.new(Date.new(2025, 3, 1), Date.new(2025, 4, 5)),
+      Bki::Payment.new(Date.new(2025, 3, 1), Date.new(2025, 3, 10)),
       Bki::Payment.new(Date.new(2025, 4, 1), Date.new(2025, 4, 20)),
       Bki::Payment.new(Date.new(2025, 5, 22), nil)
     ]
   end
 
   it "return interval_paid_overdue" do
-    expect(interval_paid_overdue).to eq([Date.new(2025, 2, 1), Date.new(2025, 4, 5)])
+    expect(interval_paid_overdue).to eq([Date.new(2025, 2, 1), Date.new(2025, 3, 10)])
   end
 
   context "all payments overdue" do
@@ -285,7 +285,38 @@ describe "#interval_paid_overdue" do
     end
 
     it "returns nil" do
-      expect(interval_paid_overdue).to eq(nil)
+      expect(interval_paid_overdue).to eq([])
+    end
+  end
+
+  # 2 платежа оплачены в срок
+  # 2 платежа оплачены с просрочкой в нахлёст
+  # 1 платёж оплачен вовремя
+  # 3 платежа оплачены с просрочкой в нахлёст
+  # 2 платежа, один оплачен с просрочкой, второй просрочен и не оплачен (эти два платежа не идут в нахлёст с предыдущей группой из 3х)
+
+  context "many match periods" do
+    let(:payments) do
+      [
+        Bki::Payment.new(Date.new(2024, 1, 1), Date.new(2024, 1, 1)),
+        Bki::Payment.new(Date.new(2024, 2, 1), Date.new(2024, 2, 1)),
+
+        Bki::Payment.new(Date.new(2024, 3, 1), Date.new(2024, 4, 3)),
+        Bki::Payment.new(Date.new(2024, 4, 1), Date.new(2024, 5, 1)),
+
+        Bki::Payment.new(Date.new(2024, 5, 1), Date.new(2024, 5, 1)),
+
+        Bki::Payment.new(Date.new(2024, 6, 1), Date.new(2024, 7, 5)),
+        Bki::Payment.new(Date.new(2024, 7, 1), Date.new(2024, 8, 5)),
+        Bki::Payment.new(Date.new(2024, 8, 1), Date.new(2024, 9, 1)),
+
+        Bki::Payment.new(Date.new(2024, 9, 1), Date.new(2024, 10, 5)),
+        Bki::Payment.new(Date.new(2024, 10, 1), nil)
+      ]
+    end
+
+    it "last group with 3 payments" do
+      expect(interval_paid_overdue).to eq([Date.new(2024, 6, 1), Date.new(2024, 9, 1)])
     end
   end
 end

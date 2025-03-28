@@ -34,39 +34,55 @@ module Bki
       #   нужно определять продолжительность интервала
       #   нужно определять начало интервала
 
-    def interval_paid_overdue
-      interval = {}
+    def xinterval_paid_overdue
+      collected_intervals = {}
       tmp_payments = []
       number_interval = 1
       # исключаем из списка платежей оплаты вовремя и не наступившие платежи
       payments_temp = payments.reject { |payment| payment.paid_in_time? || payment.due? }
-      payments_temp.reject { |payment| payment.active_overdue? }
+      # payments_temp.reject { |payment| payment.active_overdue? }
       # собрать ВСЕ интервалы, в которых платежи просачивались в нахлёст
       payments_temp.each_cons(2) do |current_payment, next_payment|
         if current_payment.continuous_overdue?(next_payment)
           tmp_payments << current_payment
           tmp_payments << next_payment
-          if interval == {}
-            interval[number_interval] = tmp_payments
-          end
-        else  #условия продумать, если один интервал сюда не заходит
-          interval[number_interval] = tmp_payments
+        else
+          collected_intervals[number_interval] = tmp_payments
           tmp_payments = []
           number_interval += 1
         end
       end
-      return result = [] if interval == {}
+      if tmp_payments.any?
+        collected_intervals[number_interval] = tmp_payments
+      end
 
-      last_interval = interval[interval.keys.last]
+      collected_intervals.delete_if do |_index, overdued_payments|
+        overdued_payments.any?(&:active_overdue?)
+      end
+      return [] if collected_intervals == {}
 
-      return nil if last_interval[0]&.paid_date.nil?
+      last_interval_index = collected_intervals.keys.max
+      last_interval = collected_intervals[last_interval_index]
+      return [] if last_interval[0]&.paid_date.nil?
 
       begin_date = last_interval[0].date
       end_date = last_interval[-1]&.paid_date
       result = [begin_date, end_date]
-      days_diff = (end_date - begin_date).to_i
-      puts "Начало интервала #{result[0]},конец интервала #{result[1]} продолжительность = #{days_diff}"
+      # days_diff = (end_date - begin_date).to_i
+      # puts "Начало интервала #{result[0]},конец интервала #{result[1]} продолжительность = #{days_diff}"
       result
+    end
+
+    def interval_paid_overdue
+      last_paid_with_overdue_iterval = payments
+        .select { |payment| payment.active_overdue? || payment.paid_with_overdue? }
+        # группируем просрочки в интервалы "в нахлёст"
+        .chunk_while { |cur_p, next_p| cur_p.continuous_overdue?(next_p) }
+        # откидываем интервалы с активной просрочкой - они не погашены
+        .reject { |collected_payments| collected_payments.any?(&:active_overdue?) }
+        .last
+
+      (last_paid_with_overdue_iterval.first.date...last_paid_with_overdue_iterval.last.paid_date)
     end
   end
 end

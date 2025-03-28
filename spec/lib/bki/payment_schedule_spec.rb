@@ -270,7 +270,7 @@ describe "#interval_paid_overdue" do
     end
 
     it "all payments overdue empty array" do
-      expect(interval_paid_overdue).to eq(nil)
+      expect(interval_paid_overdue).to be_empty
     end
   end
 
@@ -317,6 +317,31 @@ describe "#interval_paid_overdue" do
 
     it "last group with 3 payments" do
       expect(interval_paid_overdue).to eq([Date.new(2024, 6, 1), Date.new(2024, 9, 1)])
+    end
+  end
+
+  context "many match periods" do
+    let(:payments) do
+      [
+        Bki::Payment.new(Date.new(2024, 1, 1), Date.new(2024, 1, 1)),
+        Bki::Payment.new(Date.new(2024, 2, 1), Date.new(2024, 2, 1)),
+
+        Bki::Payment.new(Date.new(2024, 3, 1), Date.new(2024, 4, 3)),
+        Bki::Payment.new(Date.new(2024, 4, 1), Date.new(2024, 5, 1)),
+
+        Bki::Payment.new(Date.new(2024, 5, 1), Date.new(2024, 5, 1)),
+
+        Bki::Payment.new(Date.new(2024, 6, 1), Date.new(2024, 7, 5)),
+        Bki::Payment.new(Date.new(2024, 7, 1), Date.new(2024, 8, 5)),
+        Bki::Payment.new(Date.new(2024, 8, 1), Date.new(2024, 9, 1)),
+
+        Bki::Payment.new(Date.new(2024, 9, 1), Date.new(2024, 10, 5)),
+        Bki::Payment.new(Date.new(2024, 10, 1), Date.new(2024, 10, 15))
+      ]
+    end
+
+    it "last group with 3 payments" do
+      expect(interval_paid_overdue).to eq((payments[-2].date...payments[-1].paid_date))
     end
   end
 end

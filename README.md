@@ -1,24 +1,19 @@
 # README
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Учебный проект для ведения платёжных расписаний. REST API
 
-Things you may want to cover:
+Crud - платежи и расписание, сделки + тесты
+сериализация, валидация,
+Тесты на Rspec
+тесты валидатора
+X-Auth-Token - аутетификация
 
-* Ruby version
+Использованные библиотеки: Rspec
 
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+gem "faraday" - HTTP-клиент для Ruby
+gem "sidekiq" - фоновые задачи
+gem "redis" - для хранения очередей
+gem "aasm" - конечный автомат state-machine
+gem "pg" - бд- PostgreSQL
+gem "webmock" - для подделки запросов
+gem "standardrb" - инструмент для автоматического форматирования и проверки стиля кода в Ruby-проектах

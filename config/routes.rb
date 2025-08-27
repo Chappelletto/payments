@@ -5,8 +5,8 @@ Rails.application.routes.draw do
   get "api/payments", to: "api/payments#index"
   get "api/payments/:id", to: "api/payments#show"
   post "api/payments", to: "api/payments#create"
-  patch "/api/payments/:id", to: "api/payments#update"
-  delete "/api/payments/:id", to: "api/payments#delete"
+  patch "api/payments/:id", to: "api/payments#update"
+  delete "api/payments/:id", to: "api/payments#delete"
 
   get "api/deals", to: "api/deals#index"
   get "api/deals/:id", to: "api/deals#show"
